@@ -95,7 +95,7 @@ public class UploadService extends HttpServlet {
 				// iterates over form's fields
 				for (FileItem item : formItems) {
 					// processes only fields that are not form fields
-					if (!item.isFormField()) {
+					if (!item.isFormField() && item.getSize() > 0) {
 						String fileName = new File(item.getName()).getName();
 						String filePath = uploadPath + File.separator
 								+ fileName;
@@ -106,6 +106,9 @@ public class UploadService extends HttpServlet {
 						// saves the file on disk
 						item.write(storeFile);
 						msg = "Upload has been done successfully!";
+					} else {
+						msg = "Error: Please specify a valid file item.";
+						System.out.println("Missing or empty form field.");
 					}
 				}
 			}
