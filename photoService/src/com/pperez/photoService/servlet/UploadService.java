@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,12 +17,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Servlet implementation class UploadService
  */
 @WebServlet("/UploadService")
 public class UploadService extends HttpServlet {
+	final Logger logger = LoggerFactory.getLogger(UploadService.class);
+	
 	private static final long serialVersionUID = 1L;
 
 	// location to store file uploaded
@@ -47,9 +54,17 @@ public class UploadService extends HttpServlet {
 		// checks if the request actually contains upload file
 		if (!ServletFileUpload.isMultipartContent(request)) {
 			// if not, we stop here
+			logger.warn("Aborting: Form must have enctype=multipart/form-data.");
+			
+			JsonObject jsonObj = Json.createObjectBuilder()
+					.add("error_code", "1")
+					.add("error_msg", "Form must have enctype=multipart/form-data.")
+					.build();
+			
 			PrintWriter writer = response.getWriter();
-			writer.println("Error: Form must has enctype=multipart/form-data.");
+			writer.println(jsonObj.toString());
 			writer.flush();
+			
 			return;
 		}
 
@@ -59,7 +74,7 @@ public class UploadService extends HttpServlet {
 		factory.setSizeThreshold(MEMORY_THRESHOLD);
 		// sets temporary location to store files
 		factory.setRepository(new File(System.getProperty("java.io.tmpdir")));
-		System.out.println("java.io.tmpdir: " + System.getProperty("java.io.tmpdir"));
+		logger.debug("java.io.tmpdir: " + System.getProperty("java.io.tmpdir"));
 		
 		ServletFileUpload upload = new ServletFileUpload(factory);
 
@@ -77,19 +92,20 @@ public class UploadService extends HttpServlet {
 		// creates the directory if it does not exist
 		File uploadDir = new File(uploadPath);
 		if (!uploadDir.exists()) {
-			System.out.println("Upload directory does not exist so create it: " + uploadDir.getPath());
+			logger.info("Upload directory does not exist so create it: " + uploadDir.getPath());
 			uploadDir.mkdir();
 		} else {
-			System.out.println("Upload directory exists: " + uploadDir.getPath());
+			logger.debug("Upload directory exists: " + uploadDir.getPath());
 		}
 
+		String errMsg = "";
 		String msg = "";
 
 		try {
 			// parses the request's content to extract file data
 			List<FileItem> formItems = upload.parseRequest(request);
 			
-			System.out.println("Now parsing file items.");
+			logger.debug("Now parsing file items.");
 					
 			if (formItems != null && formItems.size() > 0) {
 				// iterates over form's fields
@@ -101,29 +117,38 @@ public class UploadService extends HttpServlet {
 								+ fileName;
 						File storeFile = new File(filePath);
 						
-						System.out.println("Now writing file: " + filePath);
+						logger.debug("Now writing file: " + filePath);
 
 						// saves the file on disk
 						item.write(storeFile);
-						msg = "Upload has been done successfully!";
+						logger.info("Upload has been done successfully!");
 					} else {
-						msg = "Error: Please specify a valid file item.";
-						System.out.println("Missing or empty form field.");
+						errMsg = "Error: Please specify a valid file item.";
+						logger.warn("Missing or empty form field.");
 					}
 				}
 			}
 		} catch (Exception ex) {
-			System.out.println("There was an error: " + ex.getMessage());
+			logger.error("There was an error: " + ex.getMessage());
 			ex.printStackTrace();
-			msg = "There was an error: " + ex.getMessage();
+			errMsg = "There was an error: " + ex.getMessage();
 		}
 
-		response.setContentType("text/html");
-
+		response.setContentType("application/json");
+		
+		JsonObjectBuilder builder = Json.createObjectBuilder();
+		
+		if (errMsg.length() > 0) {
+			builder.add("error_code", "1");
+			builder.add("error_msg", errMsg);
+		} else {
+			builder.add("error_code", "0");
+			builder.add("error_msg", "");
+		}
+		
 		PrintWriter out = response.getWriter();
-		out.write("<html><head></head><body>");
-		out.write(msg);
-		out.write("</body></html>");
+		out.write(builder.build().toString());
+		out.flush();
 	}
 
 	/**
