@@ -3,9 +3,12 @@ package com.pperez.photoService.servlet;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.servlet.ServletException;
@@ -31,6 +34,10 @@ public class UploadService extends HttpServlet {
 
 	// location to store file uploaded
 	private static final String UPLOAD_DIRECTORY = "upload";
+	
+	// endpoints
+	private static final String FILE_ENDPOINT = "file/";
+	private static final String THUMBNAIL_ENDPOINT = "thumbnail/";
 
 	// upload settings
 	private static final int MEMORY_THRESHOLD = 1024 * 1024 * 3; // 3MB
@@ -100,7 +107,8 @@ public class UploadService extends HttpServlet {
 
 		String errMsg = "";
 		String msg = "";
-
+		JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();
+		
 		try {
 			// parses the request's content to extract file data
 			List<FileItem> formItems = upload.parseRequest(request);
@@ -122,6 +130,16 @@ public class UploadService extends HttpServlet {
 						// saves the file on disk
 						item.write(storeFile);
 						logger.info("Upload has been done successfully!");
+						
+						JsonObjectBuilder fileItem = Json.createObjectBuilder()
+							.add("name", fileName)
+							.add("size", item.getSize())
+							.add("url", FILE_ENDPOINT + fileName)
+							.add("thumbnail_url", THUMBNAIL_ENDPOINT + fileName)
+							.add("delete_url", FILE_ENDPOINT + fileName)
+							.add("delete_type", "DELETE");
+						
+						fileArrayBuilder.add(fileItem);
 					} else {
 						errMsg = "Error: Please specify a valid file item.";
 						logger.warn("Missing or empty form field.");
@@ -134,20 +152,27 @@ public class UploadService extends HttpServlet {
 			errMsg = "There was an error: " + ex.getMessage();
 		}
 
+		response.setHeader("Pragma", "no-cache");
+		response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");		
+		response.setHeader("X-Content-Type-Options", "nosniff"); 	// Prevent Internet Explorer from MIME-sniffing the content-type:
 		response.setContentType("application/json");
 		
-		JsonObjectBuilder builder = Json.createObjectBuilder();
+		PrintWriter out = response.getWriter();
 		
 		if (errMsg.length() > 0) {
+			JsonObjectBuilder builder = Json.createObjectBuilder();
 			builder.add("error_code", "1");
 			builder.add("error_msg", errMsg);
+			out.write(builder.build().toString());
 		} else {
-			builder.add("error_code", "0");
-			builder.add("error_msg", "");
+			response.setHeader("Content-Disposition", "inline; filename=\"files.json\"");
+			JsonObject files = Json.createObjectBuilder()
+					.add("files", fileArrayBuilder)
+					.build();
+			out.write(files.toString());
+			logger.debug(files.toString());
 		}
 		
-		PrintWriter out = response.getWriter();
-		out.write(builder.build().toString());
 		out.flush();
 	}
 
