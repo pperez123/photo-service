@@ -16,7 +16,7 @@
     'use strict';
 
     var isOnGitHub = window.location.hostname === 'blueimp.github.io',
-        url = isOnGitHub ? '//jquery-file-upload.appspot.com/' : 'server/php/';
+        url = 'http://localhost:8080/photoService/UploadService';
 
     angular.module('demo', [
         'blueimp.fileupload'
