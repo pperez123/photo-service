@@ -4,16 +4,16 @@
 package com.pperez.photoService.rest;
 
 import java.io.File;
+import java.util.Date;
 
-import javax.servlet.ServletContext;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 import javax.websocket.server.PathParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -23,77 +23,74 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pperez.photoService.rest.util.FileStreamingOutput;
-import com.pperez.photoService.servlet.UploadService;
 
 /**
- * @author Philip
- *         Perez Aug 9, 2014
- *         FileService.java
+ * @author Philip Perez Aug 9, 2014 FileService.java
  */
 @Path("/file/{filename}")
-public class FileService {
-    final Logger logger = LoggerFactory.getLogger(UploadService.class);
-
-    // location to store file uploaded
-    private static final String UPLOAD_DIRECTORY = "upload";
-    
-    @Context
-    ServletContext servletContext;
+public class FileService extends BaseService {
+    private final Logger logger = LoggerFactory.getLogger(FileService.class);
 
     @GET
     public Response getFile(@PathParam("filename") String fileName) throws WebApplicationException {
         String uploadDirectory = uploadDirectory();
         FileStreamingOutput fileOutput = null;
-        
-        if (uploadDirectory != null) {
+        Response returnResponse = Response.status(Status.BAD_REQUEST).build();
+
+        if (fileName != null) {
             String filePath = uploadDirectory + File.separator + fileName;
             File file = new File(filePath);
-            
+
             if (file.exists()) {
                 fileOutput = new FileStreamingOutput(file);
             } else {
                 throw new WebApplicationException(Status.NOT_FOUND);
             }
+
+            MediaType type = DefaultMediaTypePredictor.CommonMediaTypes.getMediaTypeFromFileName(fileName);
+            type = inlineType(type.getType()) ? MediaType.APPLICATION_OCTET_STREAM_TYPE : type;
+
+            returnResponse = responseWithEntity(fileOutput, type)
+                    .header("Content-Disposition", inlineType(type.getType()) ? "inline" : "attachment" + ", filename=" + fileName)
+                    .header("Content-Length", file.length())
+                    .lastModified(new Date(file.lastModified())).build();
+        } else {
+            File uploadDir = new File(uploadDirectory);
+
+            if (uploadDir.exists() && uploadDir.isDirectory()) {
+                JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();
+                
+                for (File file : uploadDir.listFiles()) {
+                    String hostName = "http://" + servletRequest.getServerName();
+
+                    if (servletRequest.getServerPort() != 80) {
+                        hostName += ":" + servletRequest.getServerPort();
+                    }
+
+                    JsonObjectBuilder fileItem = Json.createObjectBuilder()
+                            .add("name", file.getName())
+                            .add("size", file.length())
+                            .add("url", hostName + FILE_ENDPOINT + file.getName())
+                            .add("thumbnail_url", hostName + THUMBNAIL_ENDPOINT + file.getName())
+                            .add("delete_url", hostName + FILE_ENDPOINT + file.getName()).add("delete_type", "DELETE");
+
+                    fileArrayBuilder.add(fileItem);
+                }
+                
+                returnResponse = responseWithEntity(fileArrayBuilder.build(), MediaType.APPLICATION_JSON_TYPE).build();
+            }
+            else {
+                throw new WebApplicationException(Status.NOT_FOUND);
+            }
         }
 
-        return responseWithEntity(fileOutput, DefaultMediaTypePredictor.CommonMediaTypes.
-                getMediaTypeFromFileName(fileName)).build();
-    }
-
-    @OPTIONS
-    @HEAD
-    public Response returnOptions() {
-        Response response = Response.ok()
-            .header("Pragma", "no-cache")
-            .header("Cache-Control", "no-store, no-cache, must-revalidate")
-            .header("X-Content-Type-Options", "nosniff") // Prevent IE from MIME sniffing the content
-            .header("Access-Control-Allow-Origin", "*") // Allow cross domain resource sharing
-            .header("Access-Control-Allow-Credentials", "true")
-            .header("Access-Control-Allow-Methods", "OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE")
-            .header("Access-Control-Allow-Headers", "Content-Type,Content-Disposition,Content-Range")
-            .build();
-        return response;
-    }
-
-    // constructs the directory path to store upload file
-    // this path is relative to application's directory
-    protected String uploadDirectory() {
-        String uploadPath = null;
-
-        if (servletContext != null) {
-            uploadPath = servletContext.getRealPath("") + File.separator + UPLOAD_DIRECTORY;
-        }
-        else {
-            logger.debug("Servlet context is null.");
-        }
-
-        return uploadPath;
+        return returnResponse;
     }
     
-    protected Response.ResponseBuilder responseWithEntity(Object entity, MediaType type) {
-        return Response.ok(entity, type)
-                .header("Pragma", "no-cache")
-                .header("Cache-Control", "no-store, no-cache, must-revalidate")
-                .header("X-Content-Type-Options", "nosniff"); // Prevent IE from MIME sniffing the content
+    @DELETE
+    public Response deleteFile(@PathParam("filename") String fileName) throws WebApplicationException {
+        Response returnResponse = Response.status(Status.BAD_REQUEST).build();
+        
+        return returnResponse;
     }
 }
