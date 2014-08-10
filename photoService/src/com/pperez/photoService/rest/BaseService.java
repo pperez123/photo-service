@@ -39,9 +39,13 @@ public class BaseService {
     protected HttpServletRequest servletRequest;
 
     @OPTIONS
-    @HEAD
     public Response returnOptions() {
-        return Response.ok().build();
+        return defaultOkResponse().build();
+    }
+    
+    @HEAD
+    public Response head() {
+        return defaultOkResponse().build();
     }
 
     // constructs the directory path to store upload file
@@ -57,9 +61,19 @@ public class BaseService {
 
         return uploadPath;
     }
+    
+    protected String pathForUploadedFile(String fileName) {
+        return uploadDirectory() + File.separator + fileName;
+    }
 
     protected Response.ResponseBuilder responseWithEntity(Object entity, MediaType type) {
-        return Response.ok(entity, type)
+        return defaultOkResponse()
+                .entity(entity)
+                .type(type);
+    }
+    
+    protected Response.ResponseBuilder defaultOkResponse() {
+        return Response.ok()
                 .header("Pragma", "no-cache")
                 .header("Cache-Control", "no-store, no-cache, must-revalidate")
                 // Prevent IE from MIME sniffing the content

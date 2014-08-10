@@ -5,10 +5,12 @@ package com.pperez.photoService.rest.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 /**
@@ -31,6 +33,9 @@ public class FileStreamingOutput implements StreamingOutput {
             while ((bytes = input.read()) != -1) {
                 output.write(bytes);
             }
+        }
+        catch (FileNotFoundException e) {
+            throw new WebApplicationException(Status.NOT_FOUND);
         }
         catch (Exception e) {
             throw new WebApplicationException(e);

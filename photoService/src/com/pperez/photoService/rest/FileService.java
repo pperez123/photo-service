@@ -25,7 +25,9 @@ import org.slf4j.LoggerFactory;
 import com.pperez.photoService.rest.util.FileStreamingOutput;
 
 /**
- * @author Philip Perez Aug 9, 2014 FileService.java
+ * @author Philip Perez 
+ * Aug 9, 2014 
+ * FileService.java
  */
 @Path("/file/{filename}")
 public class FileService extends BaseService {
@@ -33,17 +35,19 @@ public class FileService extends BaseService {
 
     @GET
     public Response getFile(@PathParam("filename") String fileName) throws WebApplicationException {
+        logger.debug("File name is " + fileName);
+        
         String uploadDirectory = uploadDirectory();
         FileStreamingOutput fileOutput = null;
         Response returnResponse = Response.status(Status.BAD_REQUEST).build();
 
         if (fileName != null) {
-            String filePath = uploadDirectory + File.separator + fileName;
-            File file = new File(filePath);
+            File file = new File(pathForUploadedFile(fileName));
 
             if (file.exists()) {
                 fileOutput = new FileStreamingOutput(file);
             } else {
+                logger.debug("File not found: " + pathForUploadedFile(fileName));
                 throw new WebApplicationException(Status.NOT_FOUND);
             }
 
@@ -80,6 +84,7 @@ public class FileService extends BaseService {
                 returnResponse = responseWithEntity(fileArrayBuilder.build(), MediaType.APPLICATION_JSON_TYPE).build();
             }
             else {
+                logger.debug("Upload directory not found");
                 throw new WebApplicationException(Status.NOT_FOUND);
             }
         }
@@ -90,6 +95,24 @@ public class FileService extends BaseService {
     @DELETE
     public Response deleteFile(@PathParam("filename") String fileName) throws WebApplicationException {
         Response returnResponse = Response.status(Status.BAD_REQUEST).build();
+        
+        if (fileName != null) {
+            File file = new File(pathForUploadedFile(fileName));
+            
+            if (file.exists()) {
+                try {
+                    if (file.delete()) {
+                        returnResponse = Response.ok().build();
+                    }
+                } catch (SecurityException ex) {
+                    logger.warn(ex.getMessage());
+                    throw new WebApplicationException(ex.getMessage());
+                }
+            } else {
+                logger.warn("No such file: " + pathForUploadedFile(fileName));
+                throw new WebApplicationException(Status.NOT_FOUND);
+            }
+        }
         
         return returnResponse;
     }
