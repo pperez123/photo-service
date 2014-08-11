@@ -17,28 +17,27 @@ import javax.ws.rs.core.UriInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pperez.photoService.ServiceConstants;
+
 /**
- * @author Philip Perez Aug 10, 2014 BaseService.java
+ * @author Philip Perez
+ * @version Aug 10, 2014
+ *          <p>
+ *          BaseService.java
+ *          </p>
  */
 public class BaseService {
     private final Logger logger = LoggerFactory.getLogger(BaseService.class);
 
-    // location to store file uploaded
-    protected static final String UPLOAD_DIRECTORY = "upload";
-    
     // endpoints
-    protected static final String FILE_ENDPOINT = "/photoService/file/";
-    protected static final String THUMBNAIL_ENDPOINT = "/photoService/thumbnail/";
-
-    // Media types where "Content-Disposition" header should be "inline"
-    protected static final String[] inlineMediaTypes = { "image/png", "image/jpeg", "image/gif", "image/jpg" };
+    protected static final String THUMBNAIL_ENDPOINT = ServiceConstants.getRESTRelativeUri(false) + "/thumbnail/";
 
     @Context
     protected ServletContext servletContext;
-    
+
     @Context
     protected HttpServletRequest servletRequest;
-    
+
     @Context
     protected UriInfo uriInfo;
 
@@ -47,7 +46,7 @@ public class BaseService {
         logger.debug("returnOptions()");
         return defaultOkResponse().build();
     }
-    
+
     @HEAD
     public Response doHead() {
         logger.debug("doHead()");
@@ -60,42 +59,43 @@ public class BaseService {
         String uploadPath = "";
 
         if (servletContext != null) {
-            uploadPath = servletContext.getRealPath("") + File.separator + UPLOAD_DIRECTORY;
+            uploadPath = servletContext.getRealPath("") + File.separator + ServiceConstants.UPLOAD_DIRECTORY;
         } else {
             logger.debug("Servlet context is null.");
         }
 
         return uploadPath;
     }
-    
+
     protected String pathForUploadedFile(String fileName) {
         return uploadDirectory() + File.separator + fileName;
     }
 
     protected Response.ResponseBuilder responseWithEntity(Object entity, MediaType type) {
-        return defaultOkResponse()
-                .entity(entity)
-                .type(type);
+        Response.ResponseBuilder builder = defaultOkResponse().entity(entity);
+        
+        if (type != null) {
+            builder.type(type);
+        }
+        
+        return builder;
     }
-    
+
     protected Response.ResponseBuilder defaultOkResponse() {
-        return Response.ok()
-                .header("Pragma", "no-cache")
-                .header("Cache-Control", "no-store, no-cache, must-revalidate")
-                // Prevent IE from MIME sniffing the content
-                .header("X-Content-Type-Options", "nosniff")
-                // Allow cross domain resource sharing
-                .header("Access-Control-Allow-Origin", "*").header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Allow-Methods", "OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE")
-                .header("Access-Control-Allow-Headers", "Content-Type,Content-Disposition,Content-Range");
+        return Response.ok().header(ServiceConstants.HTTPHeader.PRAGMA, ServiceConstants.HTTPHeader.PRAGMA_VALUE)
+                .header(ServiceConstants.HTTPHeader.CACHE_CONTROL, ServiceConstants.HTTPHeader.CACHE_CONTROL_VALUE)
+                .header(ServiceConstants.HTTPHeader.X_CONTENT_TYPE_OPTIONS, ServiceConstants.HTTPHeader.X_CONTENT_TYPE_OPTIONS_VALUE)
+                .header(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_ORIGIN, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_ORIGIN_VALUE)
+                .header(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_CREDENTIALS, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_CREDENTIALS_VALUE)
+                .header(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_METHODS, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_METHODS_VALUE)
+                .header(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_HEADERS, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_HEADERS_VALUE);
     }
 
     protected boolean inlineType(String type) {
-        logger.debug("Inline type? " + type);
         boolean flag = false;
 
         if (type != null) {
-            for (String inlineType : inlineMediaTypes) {
+            for (String inlineType : ServiceConstants.INLINE_MEDIA_TYPES) {
                 if (type.equalsIgnoreCase(inlineType)) {
                     logger.debug("Inline type detected: " + type);
                     flag = true;

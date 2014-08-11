@@ -21,6 +21,8 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pperez.photoService.ServiceConstants;
+
 /**
  * Servlet implementation class UploadService
  */
@@ -30,12 +32,9 @@ public class UploadService extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    // location to store file uploaded
-    private static final String UPLOAD_DIRECTORY = "upload";
-
     // endpoints
-    private static final String FILE_ENDPOINT = "/photoService/webapi/file/";
-    private static final String THUMBNAIL_ENDPOINT = "/photoService/webapi/thumbnail/";
+    private static final String FILE_ENDPOINT =  ServiceConstants.getRESTRelativeUri(true) + "/file/";
+    private static final String THUMBNAIL_ENDPOINT = ServiceConstants.getRESTRelativeUri(true) + "/thumbnail/";
 
     // upload settings
     private static final int MEMORY_THRESHOLD = 1024 * 1024 * 3; // 3MB
@@ -88,7 +87,7 @@ public class UploadService extends HttpServlet {
 
         // constructs the directory path to store upload file
         // this path is relative to application's directory
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
+        String uploadPath = getServletContext().getRealPath("") + File.separator + ServiceConstants.UPLOAD_DIRECTORY;
 
         // creates the directory if it does not exist
         File uploadDir = new File(uploadPath);
@@ -130,12 +129,12 @@ public class UploadService extends HttpServlet {
                         }
 
                         JsonObjectBuilder fileItem = Json.createObjectBuilder()
-                                .add("name", fileName)
-                                .add("size", item.getSize())
-                                .add("url", hostName + FILE_ENDPOINT + fileName)
-                                .add("thumbnail_url", hostName + THUMBNAIL_ENDPOINT + fileName)
-                                .add("delete_url", hostName + FILE_ENDPOINT + fileName)
-                                .add("delete_type", "DELETE");
+                                .add(ServiceConstants.FileListJSON.NAME, fileName)
+                                .add(ServiceConstants.FileListJSON.SIZE, item.getSize())
+                                .add(ServiceConstants.FileListJSON.URL, hostName + FILE_ENDPOINT + fileName)
+                                .add(ServiceConstants.FileListJSON.THUMBNAIL_URL, hostName + THUMBNAIL_ENDPOINT + fileName)
+                                .add(ServiceConstants.FileListJSON.DELETE_URL, hostName + FILE_ENDPOINT + fileName)
+                                .add(ServiceConstants.FileListJSON.DELETE_TYPE, ServiceConstants.FileListJSON.DELETE_METHOD);
 
                         fileArrayBuilder.add(fileItem);
                     }
@@ -162,7 +161,7 @@ public class UploadService extends HttpServlet {
             out.write(builder.build().toString());
         }
         else {
-            response.setHeader("Content-Disposition", "inline; filename=\"files.json\"");
+            response.setHeader(ServiceConstants.HTTPHeader.CONTENT_DISPOSITION, "inline; filename=\"files.json\"");
             JsonObject files = Json.createObjectBuilder().add("files", fileArrayBuilder).build();
             out.write(files.toString());
             logger.debug(files.toString());
@@ -175,7 +174,7 @@ public class UploadService extends HttpServlet {
             IOException {
         // constructs the directory path to store upload file
         // this path is relative to application's directory
-        String uploadPath = getServletContext().getRealPath("") + File.separator + UPLOAD_DIRECTORY;
+        String uploadPath = getServletContext().getRealPath("") + File.separator + ServiceConstants.UPLOAD_DIRECTORY;
         File uploadDir = new File(uploadPath);
         JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();
         String errMsg = "";
@@ -189,11 +188,12 @@ public class UploadService extends HttpServlet {
                 }
 
                 JsonObjectBuilder fileItem = Json.createObjectBuilder()
-                        .add("name", file.getName())
-                        .add("size", file.length())
-                        .add("url", hostName + FILE_ENDPOINT + file.getName())
-                        .add("thumbnail_url", hostName + THUMBNAIL_ENDPOINT + file.getName())
-                        .add("delete_url", hostName + FILE_ENDPOINT + file.getName()).add("delete_type", "DELETE");
+                        .add(ServiceConstants.FileListJSON.NAME, file.getName())
+                        .add(ServiceConstants.FileListJSON.SIZE, file.length())
+                        .add(ServiceConstants.FileListJSON.URL, hostName + FILE_ENDPOINT + file.getName())
+                        .add(ServiceConstants.FileListJSON.THUMBNAIL_URL, hostName + THUMBNAIL_ENDPOINT + file.getName())
+                        .add(ServiceConstants.FileListJSON.DELETE_URL, hostName + FILE_ENDPOINT + file.getName())
+                        .add(ServiceConstants.FileListJSON.DELETE_TYPE, ServiceConstants.FileListJSON.DELETE_METHOD);
 
                 fileArrayBuilder.add(fileItem);
             }
@@ -212,7 +212,7 @@ public class UploadService extends HttpServlet {
             out.write(builder.build().toString());
         }
         else {
-            response.setHeader("Content-Disposition", "inline; filename=\"files.json\"");
+            response.setHeader(ServiceConstants.HTTPHeader.CONTENT_DISPOSITION, "inline; filename=\"files.json\"");
             JsonObject files = Json.createObjectBuilder().add("files", fileArrayBuilder).build();
             out.write(files.toString());
             logger.debug(files.toString());
@@ -273,13 +273,13 @@ public class UploadService extends HttpServlet {
     }
 
     protected void setHeaders(HttpServletResponse response) {
-        response.setHeader("Pragma", "no-cache");
-        response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-        response.setHeader("X-Content-Type-Options", "nosniff"); // Prevent IE from MIME sniffing the content
-        response.setHeader("Access-Control-Allow-Origin", "*"); // Allow cross domain resource sharing
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Allow-Methods", "OPTIONS,HEAD,GET,POST,PUT,PATCH,DELETE");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type,Content-Disposition,Content-Range");
-        response.setContentType("application/json");
+        response.setHeader(ServiceConstants.HTTPHeader.PRAGMA, ServiceConstants.HTTPHeader.PRAGMA_VALUE);
+        response.setHeader(ServiceConstants.HTTPHeader.CACHE_CONTROL, ServiceConstants.HTTPHeader.CACHE_CONTROL_VALUE);
+        response.setHeader(ServiceConstants.HTTPHeader.X_CONTENT_TYPE_OPTIONS, ServiceConstants.HTTPHeader.X_CONTENT_TYPE_OPTIONS_VALUE); // Prevent IE from MIME sniffing the content
+        response.setHeader(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_ORIGIN, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_ORIGIN_VALUE); // Allow cross domain resource sharing
+        response.setHeader(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_CREDENTIALS, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_CREDENTIALS_VALUE);
+        response.setHeader(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_METHODS, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_METHODS_VALUE);
+        response.setHeader(ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_HEADERS, ServiceConstants.HTTPHeader.ACCESS_CONTROL_ALLOW_HEADERS_VALUE);
+        response.setContentType(ServiceConstants.ContentType.APPLICATION_JSON);
     }
 }
