@@ -13,11 +13,17 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.pperez.photoService.servlet.UploadService;
+
 /**
  * @author pperez
  *
  */
 public class FileStreamingOutput implements StreamingOutput {
+    private final Logger logger = LoggerFactory.getLogger(FileStreamingOutput.class);
     private File file;
 
     public FileStreamingOutput(File file) {
@@ -25,9 +31,9 @@ public class FileStreamingOutput implements StreamingOutput {
     }
 
     @Override
-    public void write(OutputStream output) throws IOException,
-            WebApplicationException {
+    public void write(OutputStream output) throws IOException,WebApplicationException {
         FileInputStream input = new FileInputStream(file);
+        
         try {
             int bytes;
             while ((bytes = input.read()) != -1) {
@@ -38,6 +44,7 @@ public class FileStreamingOutput implements StreamingOutput {
             throw new WebApplicationException(Status.NOT_FOUND);
         }
         catch (Exception e) {
+            logger.error("Error trying to stream file: " + e.getMessage());
             throw new WebApplicationException(e);
         }
         finally {

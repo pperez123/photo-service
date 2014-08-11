@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 @WebServlet("/UploadService")
 public class UploadService extends HttpServlet {
-    final Logger logger = LoggerFactory.getLogger(UploadService.class);
+    private final Logger logger = LoggerFactory.getLogger(UploadService.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -34,8 +34,8 @@ public class UploadService extends HttpServlet {
     private static final String UPLOAD_DIRECTORY = "upload";
 
     // endpoints
-    private static final String FILE_ENDPOINT = "/photoService/file/";
-    private static final String THUMBNAIL_ENDPOINT = "/photoService/thumbnail/";
+    private static final String FILE_ENDPOINT = "/photoService/webapi/file/";
+    private static final String THUMBNAIL_ENDPOINT = "/photoService/webapi/thumbnail/";
 
     // upload settings
     private static final int MEMORY_THRESHOLD = 1024 * 1024 * 3; // 3MB
@@ -134,7 +134,8 @@ public class UploadService extends HttpServlet {
                                 .add("size", item.getSize())
                                 .add("url", hostName + FILE_ENDPOINT + fileName)
                                 .add("thumbnail_url", hostName + THUMBNAIL_ENDPOINT + fileName)
-                                .add("delete_url", hostName + FILE_ENDPOINT + fileName).add("delete_type", "DELETE");
+                                .add("delete_url", hostName + FILE_ENDPOINT + fileName)
+                                .add("delete_type", "DELETE");
 
                         fileArrayBuilder.add(fileItem);
                     }

@@ -12,6 +12,7 @@ import javax.ws.rs.OPTIONS;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +38,19 @@ public class BaseService {
     
     @Context
     protected HttpServletRequest servletRequest;
+    
+    @Context
+    protected UriInfo uriInfo;
 
     @OPTIONS
     public Response returnOptions() {
+        logger.debug("returnOptions()");
         return defaultOkResponse().build();
     }
     
     @HEAD
-    public Response head() {
+    public Response doHead() {
+        logger.debug("doHead()");
         return defaultOkResponse().build();
     }
 
@@ -85,11 +91,13 @@ public class BaseService {
     }
 
     protected boolean inlineType(String type) {
+        logger.debug("Inline type? " + type);
         boolean flag = false;
 
         if (type != null) {
             for (String inlineType : inlineMediaTypes) {
                 if (type.equalsIgnoreCase(inlineType)) {
+                    logger.debug("Inline type detected: " + type);
                     flag = true;
                     break;
                 }
