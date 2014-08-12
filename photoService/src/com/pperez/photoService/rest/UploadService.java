@@ -3,15 +3,19 @@
  */
 package com.pperez.photoService.rest;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
@@ -25,7 +29,9 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.imgscalr.Scalr;
+import org.imgscalr.Scalr.Method;
+import org.imgscalr.Scalr.Mode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,10 +67,11 @@ public class UploadService extends BaseService {
 
                         if (fileName != null) {
                             String filePath = pathForUploadedFile(fileName);
-                            logger.debug("File path is " + filePath);
+                            logger.debug("Saving: " + filePath);
 
                             saveFile(part.getValueAs(InputStream.class), filePath);
-
+                            saveThumbnail(filePath);
+                            
                             File file = new File(filePath);
 
                             if (file.exists() && file.isFile()) {
@@ -84,7 +91,8 @@ public class UploadService extends BaseService {
             }
         }
         
-        return responseWithEntity(fileArrayBuilder.build(), null).build();
+        JsonObject files = Json.createObjectBuilder().add(ServiceConstants.FILE_LIST_PARAM, fileArrayBuilder).build();
+        return responseWithEntity(files, null).build();
     }
     
     @GET
@@ -113,9 +121,44 @@ public class UploadService extends BaseService {
                 outputStream.flush();
                 outputStream.close();
             } catch (Exception e) {
-                logger.warn("Error saving " + filePath + ": " + e.getMessage());
-                throw new WebApplicationException(e.getMessage());
+                String msg = "Error saving " + filePath + ": " + e.getMessage();
+                logger.error(msg);
+                throw new WebApplicationException(msg);
             }
         }
+    }
+    
+    protected void saveThumbnail(String filePath) {
+        long startTime = System.currentTimeMillis();
+        File originalImageFile = new File(filePath);
+        BufferedImage originalImage = null;
+        
+        try {
+            originalImage = ImageIO.read(originalImageFile);
+        } catch (IOException e) {
+            logger.warn("Could not read image: " + e.getMessage());
+        } // load image
+        
+        // Quality indicate that the scaling implementation should do everything
+        // create as nice of a result as possible , other options like speed
+        // will return result as fast as possible
+        // Automatic mode will calculate the resultant dimensions according
+        // to image orientation .so resultant image may be size of 50*36.if you want
+        // fixed size like 50*50 then use FIT_EXACT
+        // other modes like FIT_TO_WIDTH..etc also available.
+        
+        if (originalImage != null) {
+            BufferedImage thumbImg = Scalr.resize(originalImage, Method.QUALITY, Mode.AUTOMATIC, 90, 90, Scalr.OP_ANTIALIAS);
+            File thumbnail = new File(pathForThumbnail(originalImageFile.getName()));
+            
+            try {
+                logger.debug("Writing thumbnail " + thumbnail);
+                ImageIO.write(thumbImg, "jpg", thumbnail);
+            } catch (IOException e) {
+                logger.warn("Could not write out thumbnail image: " + e.getMessage());
+            }
+        }
+
+        logger.debug("Thumbnail generation elapsed time: " + (System.currentTimeMillis() - startTime));
     }
 }

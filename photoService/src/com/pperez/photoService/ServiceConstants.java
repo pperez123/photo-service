@@ -22,11 +22,24 @@ public class ServiceConstants {
     // location to store file uploaded
     public static final String UPLOAD_DIRECTORY = "upload";
     
+    // location to store auto-generated thumbnail images
+    public static final String THUMBNAIL_DIRECTORY = "thumbnail";
+    
     // Form file upload parameter
-    public static final String UPLOAD_PARAM = "files";
+    public static final String UPLOAD_PARAM_SINGLE = "files";
+    public static final String UPLOAD_PARAM_ARRAY = "files[]";
+    
+    // Files param when sending back file list to clients
+    public static final String FILE_LIST_PARAM = "files";
     
     // Media types where "Content-Disposition" header should be "inline"
     public static final String[] INLINE_MEDIA_TYPES = { "image/png", "image/jpeg", "image/gif", "image/jpg" };
+    
+    // Files to ignore from directory listings
+    public static final String[] FILES_TO_IGNORE = { "thumbs.db" };
+    
+    // Thumbnail file prefix
+    public static final String THUMB_PREFIX = "thumb_";
     
     public class FileListJSON {
         public static final String NAME = "name";

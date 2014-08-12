@@ -6,16 +6,17 @@ package com.pperez.photoService.rest;
 import java.io.File;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.OPTIONS;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.Status;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +46,12 @@ public class BaseService {
     @Context
     protected UriInfo uriInfo;
 
-    public Response returnOptions() {
+    protected Response returnOptions() {
         logger.debug("returnOptions()");
         return defaultOkResponse().build();
     }
 
-    public Response doHead() {
+    protected Response doHead() {
         logger.debug("doHead()");
         return defaultOkResponse().build();
     }
@@ -62,15 +63,43 @@ public class BaseService {
 
         if (servletContext != null) {
             uploadPath = servletContext.getRealPath("") + File.separator + ServiceConstants.UPLOAD_DIRECTORY;
+            File dirFile = new File(uploadPath);
+            
+            if (!dirFile.exists()) {
+                logger.info("Upload directory does not exist so create it: " + dirFile.getPath());
+                dirFile.mkdir();
+            }
         } else {
             logger.debug("Servlet context is null.");
         }
 
         return uploadPath;
     }
+    
+    protected String thumbnailDirectory() {
+        String thumbnailPath = "";
+
+        if (servletContext != null) {
+            thumbnailPath = servletContext.getRealPath("") + File.separator + ServiceConstants.THUMBNAIL_DIRECTORY;
+            File dirFile = new File(thumbnailPath);
+            
+            if (!dirFile.exists()) {
+                logger.info("Thumbnail directory does not exist so create it: " + dirFile.getPath());
+                dirFile.mkdir();
+            }
+        } else {
+            logger.debug("Servlet context is null.");
+        }
+
+        return thumbnailPath;
+    }
 
     protected String pathForUploadedFile(String fileName) {
         return uploadDirectory() + File.separator + fileName;
+    }
+    
+    protected String pathForThumbnail(String fileName) {
+        return thumbnailDirectory() + File.separator + ServiceConstants.THUMB_PREFIX + fileName;
     }
 
     protected Response.ResponseBuilder responseWithEntity(Object entity, MediaType type) {
@@ -125,20 +154,66 @@ public class BaseService {
         return fileItem;
     }
     
-    protected JsonArrayBuilder getFilesInDirectory(String path) {
-        JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();;
+    protected JsonArray getFilesInDirectory(String path) {
+        JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();
         File directory = new File(path);
         
         if (directory.exists() && directory.isDirectory()) {
             for (File file : directory.listFiles()) {
-                fileArrayBuilder.add(getJsonFileBuilder(file));
+                if (!onIgnoreList(file.getName())) {
+                    fileArrayBuilder.add(getJsonFileBuilder(file));
+                }
             }
         }
         
-        return fileArrayBuilder;
+        return fileArrayBuilder.build();
     }
     
+    /**
+     * @param name
+     * @return
+     */
+    private boolean onIgnoreList(String fileName) {
+        boolean flag = false;
+        
+        for (String name : ServiceConstants.FILES_TO_IGNORE) {
+            if (fileName.equalsIgnoreCase(name)) {
+                flag = true;
+                break;
+            }
+        }
+        
+        return flag;
+    }
+
     protected Response getUploadFileList() {
-        return responseWithEntity(Json.createObjectBuilder().add("files", getFilesInDirectory(uploadDirectory())).build(), null).build();
+        Response response = responseWithEntity(Json.createObjectBuilder().add(ServiceConstants.FILE_LIST_PARAM, getFilesInDirectory(uploadDirectory())).build(), MediaType.APPLICATION_JSON_TYPE).build();
+        logger.debug("Files: " + response.getEntity().toString());
+        return response;
+    }
+    
+    protected boolean deleteFile(String filePath) throws WebApplicationException {
+        boolean flag = false;
+        
+        if (filePath != null) {
+            File file = new File(filePath);
+            
+            if (file.exists() && !file.isDirectory()) {
+                try {
+                    if (file.delete()) {
+                        logger.debug("Successfully deleted " +  filePath);
+                        flag = true;
+                    }
+                } catch (SecurityException ex) {
+                    logger.warn(ex.getMessage());
+                    throw new WebApplicationException(ex.getMessage());
+                }
+            } else {
+                logger.warn("No such file: " + pathForUploadedFile(filePath));
+                throw new WebApplicationException(Status.NOT_FOUND);
+            }
+        }
+        
+        return flag;
     }
 }

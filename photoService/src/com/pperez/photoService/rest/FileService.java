@@ -82,26 +82,14 @@ public class FileService extends BaseService {
     
     @DELETE
     @Path("{filename}")
-    public Response deleteFile(@PathParam("filename") String fileName) throws WebApplicationException {
+    public Response deleteUploadFile(@PathParam("filename") String fileName) throws WebApplicationException {
         logger.debug("deleteFile()");
         Response returnResponse = Response.status(Status.BAD_REQUEST).build();
         
         if (fileName != null) {
-            File file = new File(pathForUploadedFile(fileName));
-            
-            if (file.exists() && !file.isDirectory()) {
-                try {
-                    if (file.delete()) {
-                        returnResponse = defaultOkResponse().build();
-                    }
-                } catch (SecurityException ex) {
-                    logger.warn(ex.getMessage());
-                    throw new WebApplicationException(ex.getMessage());
-                }
-            } else {
-                logger.warn("No such file: " + pathForUploadedFile(fileName));
-                throw new WebApplicationException(Status.NOT_FOUND);
-            }
+            deleteFile(pathForUploadedFile(fileName));
+            deleteFile(pathForThumbnail(fileName));
+            returnResponse = defaultOkResponse().build();
         }
         
         return returnResponse;
