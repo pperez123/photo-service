@@ -5,6 +5,9 @@ package com.pperez.photoService.rest;
 
 import java.io.File;
 
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.HEAD;
@@ -30,7 +33,8 @@ public class BaseService {
     private final Logger logger = LoggerFactory.getLogger(BaseService.class);
 
     // endpoints
-    protected static final String THUMBNAIL_ENDPOINT = ServiceConstants.getRESTRelativeUri(false) + "/thumbnail/";
+    protected static final String THUMBNAIL_ENDPOINT = "thumbnail/";
+    protected static final String FILE_ENDPOINT = "file/";
 
     @Context
     protected ServletContext servletContext;
@@ -41,13 +45,11 @@ public class BaseService {
     @Context
     protected UriInfo uriInfo;
 
-    @OPTIONS
     public Response returnOptions() {
         logger.debug("returnOptions()");
         return defaultOkResponse().build();
     }
 
-    @HEAD
     public Response doHead() {
         logger.debug("doHead()");
         return defaultOkResponse().build();
@@ -105,5 +107,38 @@ public class BaseService {
         }
 
         return flag;
+    }
+    
+    protected JsonObjectBuilder getJsonFileBuilder(File file) {
+        JsonObjectBuilder fileItem = null;
+
+        if (file.exists() && file.isFile()) {
+            fileItem = Json.createObjectBuilder()
+                    .add(ServiceConstants.FileListJSON.NAME, file.getName())
+                    .add(ServiceConstants.FileListJSON.SIZE, file.length())
+                    .add(ServiceConstants.FileListJSON.URL,  uriInfo.getBaseUri() + FILE_ENDPOINT + file.getName())
+                    .add(ServiceConstants.FileListJSON.THUMBNAIL_URL, uriInfo.getBaseUri() + THUMBNAIL_ENDPOINT + file.getName())
+                    .add(ServiceConstants.FileListJSON.DELETE_URL, uriInfo.getBaseUri() + FILE_ENDPOINT + file.getName())
+                    .add(ServiceConstants.FileListJSON.DELETE_TYPE, ServiceConstants.FileListJSON.DELETE_METHOD);
+        }
+        
+        return fileItem;
+    }
+    
+    protected JsonArrayBuilder getFilesInDirectory(String path) {
+        JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();;
+        File directory = new File(path);
+        
+        if (directory.exists() && directory.isDirectory()) {
+            for (File file : directory.listFiles()) {
+                fileArrayBuilder.add(getJsonFileBuilder(file));
+            }
+        }
+        
+        return fileArrayBuilder;
+    }
+    
+    protected Response getUploadFileList() {
+        return responseWithEntity(Json.createObjectBuilder().add("files", getFilesInDirectory(uploadDirectory())).build(), null).build();
     }
 }

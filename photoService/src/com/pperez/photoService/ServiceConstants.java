@@ -15,14 +15,8 @@ public class ServiceConstants {
     // Path component under which the REST API's live
     public static final String APPLICATION_PATH = "webapi";
     
-    public static String getRESTRelativeUri(boolean includeLeadingSlash) {
-        String uri = SERVLET_CONTEXT_PATH + "/" + APPLICATION_PATH;
-        
-        if (includeLeadingSlash) {
-            uri = "/" + uri;
-        }
-        
-        return uri;
+    public static String getRESTRelativeUri(boolean includeLeadingSlash) {        
+        return (includeLeadingSlash ? "/" : "") + SERVLET_CONTEXT_PATH + "/" + APPLICATION_PATH;
     }
     
     // location to store file uploaded

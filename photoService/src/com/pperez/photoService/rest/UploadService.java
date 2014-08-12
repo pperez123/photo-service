@@ -8,11 +8,13 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -22,6 +24,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,47 +44,59 @@ public class UploadService extends BaseService {
     private final Logger logger = LoggerFactory.getLogger(UploadService.class);
     
     @POST
-    public Response doUpload(@FormDataParam(ServiceConstants.UPLOAD_PARAM) List<FormDataBodyPart> files) throws WebApplicationException {
+    public Response doUpload(FormDataMultiPart formParams) throws WebApplicationException {
         JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();
+        Map<String, List<FormDataBodyPart>> allFields = formParams.getFields();
         
-        for (FormDataBodyPart part : files) {
-            FormDataContentDisposition disposition = part.getFormDataContentDisposition();
+        for (String key : allFields.keySet()) {
+            logger.debug("Key is " + key);
+            List<FormDataBodyPart> files = allFields.get(key);
             
-            if (disposition != null) {
-                String fileName = disposition.getFileName();
-                
-                if (fileName != null) {
-                    String filePath = pathForUploadedFile(fileName);
-                    logger.debug("File path is " + filePath);
-                    
-                    saveFile(part.getValueAs(InputStream.class), filePath);
-                    
-                    File file = new File(filePath);
-                    String hostPath = uriInfo.getAbsolutePath() + "/";
-                    
-                    if (file.exists() && file.isFile()) {
-                        JsonObjectBuilder fileItem = Json.createObjectBuilder()
-                                .add(ServiceConstants.FileListJSON.NAME, file.getName())
-                                .add(ServiceConstants.FileListJSON.SIZE, file.length())
-                                .add(ServiceConstants.FileListJSON.URL,  hostPath + file.getName())
-                                .add(ServiceConstants.FileListJSON.THUMBNAIL_URL, uriInfo.getBaseUri() + THUMBNAIL_ENDPOINT + file.getName())
-                                .add(ServiceConstants.FileListJSON.DELETE_URL, hostPath + file.getName())
-                                .add(ServiceConstants.FileListJSON.DELETE_TYPE, ServiceConstants.FileListJSON.DELETE_METHOD);
+            if (files != null && files.size() > 0) {
+                for (FormDataBodyPart part : files) {
+                    FormDataContentDisposition disposition = part.getFormDataContentDisposition();
 
-                        fileArrayBuilder.add(fileItem);
+                    if (disposition != null) {
+                        String fileName = disposition.getFileName();
+
+                        if (fileName != null) {
+                            String filePath = pathForUploadedFile(fileName);
+                            logger.debug("File path is " + filePath);
+
+                            saveFile(part.getValueAs(InputStream.class), filePath);
+
+                            File file = new File(filePath);
+
+                            if (file.exists() && file.isFile()) {
+                                fileArrayBuilder.add(getJsonFileBuilder(file));
+                            }
+                        } else {
+                            logger.error("Could not get file name.");
+                            throw new WebApplicationException("Could not get file name.");
+                        }
+                    } else {
+                        logger.error("Could not get content disposition.");
+                        throw new WebApplicationException("Could not get content disposition.");
                     }
-                } else {
-                    logger.error("Could not get file name.");
-                    throw new WebApplicationException("Could not get file name.");
                 }
             } else {
-                logger.error("Could not get content disposition.");
-                throw new WebApplicationException("Could not get content disposition.");
+                logger.warn("No files to upload");
             }
-            
         }
         
         return responseWithEntity(fileArrayBuilder.build(), null).build();
+    }
+    
+    @GET
+    public Response getFileList() {
+        logger.debug("getFileList()");
+        return getUploadFileList();
+    }
+    
+    @OPTIONS
+    public Response returnUploadOptions() {
+        logger.debug("returnUploadOptions()");
+        return returnOptions();
     }
     
     protected void saveFile(InputStream uploadedInputStream, String filePath) throws WebApplicationException {

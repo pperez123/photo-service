@@ -16,7 +16,7 @@
     'use strict';
 
     var isOnGitHub = window.location.hostname === 'blueimp.github.io',
-        url = 'http://localhost:8080/photoService/UploadService';
+        url = 'http://localhost:8080/photoService/webapi/upload';
 
     angular.module('demo', [
         'blueimp.fileupload'

@@ -6,14 +6,11 @@ package com.pperez.photoService.rest;
 import java.io.File;
 import java.util.Date;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
-import javax.ws.rs.OPTIONS;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -29,8 +26,8 @@ import com.pperez.photoService.rest.util.FileStreamingOutput;
 
 /**
  * @author Philip Perez 
- * Aug 9, 2014 
- * FileService.java
+ * @version Aug 9, 2014 
+ * <p>FileService.java</p>
  */
 @Path("/file")
 public class FileService extends BaseService {
@@ -71,39 +68,16 @@ public class FileService extends BaseService {
     
     @OPTIONS
     @Path("{filename}")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response returnFileOptions() {
         logger.debug("returnFileOptions()");
         return returnOptions();
     }
     
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getFiles() throws WebApplicationException {
-        logger.debug("getFiles()");
-        File uploadDir = new File(uploadDirectory());
-        JsonArrayBuilder fileArrayBuilder = Json.createArrayBuilder();
-        
-        if (uploadDir.exists() && uploadDir.isDirectory()) { 
-            for (File file : uploadDir.listFiles()) {
-                String hostPath = uriInfo.getAbsolutePath() + "/";
-
-                JsonObjectBuilder fileItem = Json.createObjectBuilder()
-                        .add(ServiceConstants.FileListJSON.NAME, file.getName())
-                        .add(ServiceConstants.FileListJSON.SIZE, file.length())
-                        .add(ServiceConstants.FileListJSON.URL,  hostPath + file.getName())
-                        .add(ServiceConstants.FileListJSON.THUMBNAIL_URL, uriInfo.getBaseUri() + THUMBNAIL_ENDPOINT + file.getName())
-                        .add(ServiceConstants.FileListJSON.DELETE_URL, hostPath + file.getName())
-                        .add(ServiceConstants.FileListJSON.DELETE_TYPE, ServiceConstants.FileListJSON.DELETE_METHOD);
-
-                fileArrayBuilder.add(fileItem);
-            } 
-        }
-        else {
-            logger.debug("Upload directory not found");
-            throw new WebApplicationException(Status.NOT_FOUND);
-        }
-        
-        return responseWithEntity(fileArrayBuilder.build(), null).build();
+        logger.debug("getFiles()");        
+        return getUploadFileList();
     }
     
     @DELETE
