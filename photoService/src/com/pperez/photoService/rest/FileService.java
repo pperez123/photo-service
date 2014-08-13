@@ -6,6 +6,10 @@ package com.pperez.photoService.rest;
 import java.io.File;
 import java.util.Date;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.OPTIONS;
@@ -82,16 +86,24 @@ public class FileService extends BaseService {
     
     @DELETE
     @Path("{filename}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Response deleteUploadFile(@PathParam("filename") String fileName) throws WebApplicationException {
         logger.debug("deleteFile()");
-        Response returnResponse = Response.status(Status.BAD_REQUEST).build();
+        JsonArrayBuilder files = Json.createArrayBuilder();
         
         if (fileName != null) {
             deleteFile(pathForUploadedFile(fileName));
             deleteFile(pathForThumbnail(fileName));
-            returnResponse = defaultOkResponse().build();
+
+            JsonObjectBuilder fileObj = Json.createObjectBuilder().add(fileName, true);
+            files.add(fileObj);
         }
         
-        return returnResponse;
+        JsonArray fileArray = files.build();
+        logger.debug(fileArray.toString());
+        
+        return responseWithEntity(fileArray, null)
+                .header(ServiceConstants.HTTPHeader.CONTENT_DISPOSITION, ServiceConstants.HTTPHeader.CONTENT_DISPOSITION_FILES)
+                .build();
     }
 }

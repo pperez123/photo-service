@@ -53,6 +53,7 @@ public class ServiceConstants {
     
     public class HTTPHeader {
         public static final String CONTENT_DISPOSITION = "Content-Disposition";
+        public static final String CONTENT_DISPOSITION_FILES = "inline; filename=files.json";
         public static final String CONTENT_TYPE = "Content-Type";
         public static final String CONTENT_LENGTH = "Content-Length";
         public static final String PRAGMA = "Pragma";

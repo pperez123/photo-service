@@ -187,7 +187,9 @@ public class BaseService {
     }
 
     protected Response getUploadFileList() {
-        Response response = responseWithEntity(Json.createObjectBuilder().add(ServiceConstants.FILE_LIST_PARAM, getFilesInDirectory(uploadDirectory())).build(), MediaType.APPLICATION_JSON_TYPE).build();
+        Response response = responseWithEntity(Json.createObjectBuilder().add(ServiceConstants.FILE_LIST_PARAM, getFilesInDirectory(uploadDirectory())).build(), MediaType.APPLICATION_JSON_TYPE)
+                .header(ServiceConstants.HTTPHeader.CONTENT_DISPOSITION, ServiceConstants.HTTPHeader.CONTENT_DISPOSITION_FILES)
+                .build();
         logger.debug("Files: " + response.getEntity().toString());
         return response;
     }
