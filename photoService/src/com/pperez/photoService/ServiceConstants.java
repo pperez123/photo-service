@@ -41,6 +41,9 @@ public class ServiceConstants {
     // Thumbnail file prefix
     public static final String THUMB_PREFIX = "thumb_";
     
+    // Thumbnail max width
+    public static final double THUMBNAIL_MAX_WIDTH = 100.0;
+    
     public class FileListJSON {
         public static final String NAME = "name";
         public static final String URL = "url";

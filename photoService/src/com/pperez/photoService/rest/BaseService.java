@@ -211,7 +211,7 @@ public class BaseService {
                     throw new WebApplicationException(ex.getMessage());
                 }
             } else {
-                logger.warn("No such file: " + pathForUploadedFile(filePath));
+                logger.warn("No such file: " + filePath);
                 throw new WebApplicationException(Status.NOT_FOUND);
             }
         }

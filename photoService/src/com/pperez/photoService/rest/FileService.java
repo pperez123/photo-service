@@ -90,12 +90,27 @@ public class FileService extends BaseService {
     public Response deleteUploadFile(@PathParam("filename") String fileName) throws WebApplicationException {
         logger.debug("deleteFile()");
         JsonArrayBuilder files = Json.createArrayBuilder();
+        boolean flag = false;
         
         if (fileName != null) {
-            deleteFile(pathForUploadedFile(fileName));
-            deleteFile(pathForThumbnail(fileName));
+            try {
+                if (deleteFile(pathForUploadedFile(fileName))) {
+                    flag = true;
+                }
+            } catch (WebApplicationException e) {
+                if (e.getResponse().getStatus() == Status.NOT_FOUND.getStatusCode()) {
+                    flag = true;
+                } 
+            }
+            
+            try {
+                deleteFile(pathForThumbnail(fileName));
+            } catch (WebApplicationException e) {
+                // Eat this exception since we don't want to fail the request if thumbnail
+                // deletion failed.
+            }
 
-            JsonObjectBuilder fileObj = Json.createObjectBuilder().add(fileName, true);
+            JsonObjectBuilder fileObj = Json.createObjectBuilder().add(fileName, flag);
             files.add(fileObj);
         }
         

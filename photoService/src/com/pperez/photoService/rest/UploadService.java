@@ -147,8 +147,19 @@ public class UploadService extends BaseService {
         // fixed size like 50*50 then use FIT_EXACT
         // other modes like FIT_TO_WIDTH..etc also available.
         
+        int height = originalImage.getHeight();
+        int width = originalImage.getWidth();
+        double targetPercent = ServiceConstants.THUMBNAIL_MAX_WIDTH/(double)width;
+        int targetWidth = (int) (width * targetPercent);
+        int targetHeight = (int) (height * targetPercent);
+        
+        logger.debug("Original widthxheight: " + width + "x" + height);
+        logger.debug("Target percent: " + targetPercent);
+        logger.debug("Target widthxheight: " + targetWidth + "x" + targetHeight);
+        
+        
         if (originalImage != null) {
-            BufferedImage thumbImg = Scalr.resize(originalImage, Method.QUALITY, Mode.AUTOMATIC, 90, 90, Scalr.OP_ANTIALIAS);
+            BufferedImage thumbImg = Scalr.resize(originalImage, Method.QUALITY, Mode.FIT_EXACT, targetWidth, targetHeight, Scalr.OP_ANTIALIAS);
             File thumbnail = new File(pathForThumbnail(originalImageFile.getName()));
             
             try {
