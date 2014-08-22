@@ -1,5 +1,8 @@
 // JavaScript Document
 // FB API init
+
+var loggedIntoFB = false;
+
 $(document).ready(function() {
   $.ajaxSetup({ cache: true });
   $.getScript('//connect.facebook.net/en_US/sdk.js', function(){
@@ -37,17 +40,20 @@ function statusChangeCallback(response) {
 	// Full docs on the response object can be found in the documentation
 	// for FB.getLoginStatus().
 	if (response.status === 'connected') {
-	  // Logged into your app and Facebook.
-	  testAPI();
+		// Logged into your app and Facebook.
+		loggedIntoFB = true;
+		// Replace deafault sign-in buttons
+		$('#sign-in').html($('#galleries').html());
+		testAPI();
 	} else if (response.status === 'not_authorized') {
-	  // The person is logged into Facebook, but not your app.
-	  document.getElementById('status').innerHTML = 'Please log ' +
-		'into this app.';
+	  	// The person is logged into Facebook, but not your app.
+		console.log('Please log into this app.');
+		loggedIntoFB = false;
 	} else {
-	  // The person is not logged into Facebook, so we're not sure if
-	  // they are logged into this app or not.
-	  document.getElementById('status').innerHTML = 'Please log ' +
-		'into Facebook.';
+		// The person is not logged into Facebook, so we're not sure if
+		// they are logged into this app or not.
+		console.log('Please log into Facebook.');
+		loggedIntoFB = false;
 	}
 }
 
@@ -58,6 +64,11 @@ function checkLoginState() {
 	FB.getLoginStatus(function(response) {
 	  statusChangeCallback(response);
 	});
+	
+	if (loggedIntoFB) {
+		// TODO: send login data to the server
+		window.location = "angularjs.html";
+	}
 }
 
 // Here we run a very simple test of the Graph API after login is
@@ -66,7 +77,5 @@ function testAPI() {
 	console.log('Welcome!  Fetching your information.... ');
 	FB.api('/me', function(response) {
 	  console.log('Successful login for: ' + response.name);
-	  document.getElementById('status').innerHTML =
-		'Thanks for logging in, ' + response.name + '!';
 	});
 }
