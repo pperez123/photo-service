@@ -24,7 +24,7 @@ public class JsonUtilities {
     public JsonObject sampleFacebookMeResponse() {
         return Json.createObjectBuilder()
                 .add("email", "pperez@slipsleeve.com")
-                .add("first_name", "Philip")
+                .add("first_name", "Steve")
                 .add("gender", "male")
                 .add("id", "10152655501239640")
                 .add("last_name", "Perez")

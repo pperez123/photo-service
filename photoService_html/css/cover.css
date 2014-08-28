@@ -23,6 +23,14 @@ a:hover {
 /*
  * Base structure
  */
+/* 
+body { 
+  background: url("/img/Blurred Backgrounds (11).jpg") no-repeat center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}*/
 
 html,
 body {
