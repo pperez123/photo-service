@@ -6,6 +6,7 @@ package com.pperez.photoService.rest;
 import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HEAD;
 import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -26,6 +27,7 @@ import com.pperez.photoService.rest.util.JsonUtilities;
  * <p>LoginService.java</p>
  */
 @Path("/login")
+@Consumes(MediaType.APPLICATION_JSON)
 public class LoginService extends BaseService {
     private final Logger logger = LoggerFactory.getLogger(LoginService.class);
     protected JsonUtilities jsonUtility;
@@ -40,13 +42,20 @@ public class LoginService extends BaseService {
         return returnOptions();
     }
     
-    @GET
+    @OPTIONS
     @Path("facebook")
-    public Response doFaceBookLogin() throws WebApplicationException {
+    public Response returnFacebookOptions() {
+        logger.debug("returnFacebookOptions()");
+        return returnOptions();
+    }
+    
+    @POST
+    @Path("facebook")
+    public Response doFaceBookLogin(JsonObject json) throws WebApplicationException {
         PhotoServiceDAO dao = new PhotoServiceDAO();
-        JsonObject authResponse = jsonUtility.sampleFacebookAuthResponse();
-        JsonObject meResponse = jsonUtility.sampleFacebookMeResponse();
-        Response response = Response.ok().build();
+        JsonObject authResponse = json.getJsonObject("authResponse");
+        JsonObject meResponse = json.getJsonObject("meResponse");
+        Response response = defaultOkResponse().build();
         
         try {
             dao.openDatabase();
@@ -72,7 +81,7 @@ public class LoginService extends BaseService {
                 logger.warn("Could not find authResponse object.");
             }
             
-            int userId = 0;
+            long userId = 0;
             
             if (facebookId != 0) {
                 userId = dao.updateUserFacebookAuth(fbAccessToken, fbExpiresIn, fbSignedRequest, status, facebookId);

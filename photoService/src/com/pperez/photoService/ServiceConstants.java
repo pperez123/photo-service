@@ -66,7 +66,7 @@ public class ServiceConstants {
         public static final String X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
         public static final String X_CONTENT_TYPE_OPTIONS_VALUE = "nosniff";
         public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
-        public static final String ACCESS_CONTROL_ALLOW_ORIGIN_VALUE = "*";
+        public static final String ACCESS_CONTROL_ALLOW_ORIGIN_VALUE = "http://coversnap.com";
         public static final String ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
         public static final String ACCESS_CONTROL_ALLOW_CREDENTIALS_VALUE = "true";
         public static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";

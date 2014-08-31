@@ -18,18 +18,23 @@ import org.slf4j.LoggerFactory;
 public class PhotoServiceDAO extends MySQLAccess {
     private final Logger logger = LoggerFactory.getLogger(PhotoServiceDAO.class);
     
-    public int updateUserFacebookAuth(String fbAccessToken, long fbExpiresIn, String fbSignedRequest, String status, long facebookId) throws Exception {
+    public long updateUserFacebookAuth(String fbAccessToken, long fbExpiresIn, String fbSignedRequest, String status, long facebookId) throws Exception {
         logger.debug("updateUserFacebookAuth");
-        int result = 0;
+        long result = 0;
         
         if (connection == null) {
             logger.error("No database connection");
             return result;
         }
         
+        if (facebookId == 0) {
+            logger.warn("No facebook id. Aborting.");
+            return result;
+        }
+        
         String sql = "INSERT INTO users (fb_access_token, fb_expires_in, fb_signed_request, fb_status, fb_user_id, user_type) VALUES(?,?,?,?,?,?) ON DUPLICATE KEY UPDATE "
                 + "fb_access_token = VALUES(fb_access_token), fb_expires_in = VALUES(fb_expires_in), fb_signed_request = VALUES(fb_signed_request), fb_status = "
-                + "VALUES(fb_status), user_type = VALUES(user_type), user_id = LAST_INSERT_ID(user_id)";
+                + "VALUES(fb_status), user_type = VALUES(user_type)";
         
         PreparedStatement pStmt = null;
         ResultSet rs = null;
@@ -50,7 +55,15 @@ public class PhotoServiceDAO extends MySQLAccess {
                 result = rs.getInt(1);
             }
             
+            closeResultSet(rs);
+            closePreparedStatement(pStmt);
+            
             logger.debug("User id is " + result);
+            
+            if (result == 0) {
+                logger.debug("No key generated, so look up the user's id.");
+                result = userIdForFacebookId(facebookId); 
+            }
         } catch (Exception e) {
             logger.error("Error updating Facebook data " + e.getMessage());
             throw new Exception(e);
@@ -73,7 +86,6 @@ public class PhotoServiceDAO extends MySQLAccess {
         String sql = "UPDATE users SET email = ?, first_name = ?, last_name = ? WHERE fb_user_id = ?";
         
         PreparedStatement pStmt = null;
-        ResultSet rs = null;
         
         try {
             pStmt = connection.prepareStatement(sql);
@@ -87,6 +99,36 @@ public class PhotoServiceDAO extends MySQLAccess {
             throw new Exception(e);
         } finally {
             closePreparedStatement(pStmt);
+        }
+        
+        return result;
+    }
+    
+    public long userIdForFacebookId(long facebookId) throws Exception {
+        long result = 0;
+
+        if (facebookId > 0) {
+            PreparedStatement pStmt = null;
+            ResultSet rs = null;
+
+            try {
+                String lookupSQL = "SELECT user_id FROM users WHERE fb_user_id = ?";
+                pStmt = connection.prepareStatement(lookupSQL);
+                pStmt.setLong(1, facebookId);
+                rs = pStmt.executeQuery();
+
+                if (rs.next()){
+                    result = rs.getInt(1);
+                }
+                
+                logger.debug("User id is " + result);
+            } catch (Exception e) {
+                logger.error("Error getting user id: " + e.getMessage());
+                throw new Exception(e);
+            } finally {
+                closePreparedStatement(pStmt);
+                closeResultSet(rs);
+            }
         }
         
         return result;
