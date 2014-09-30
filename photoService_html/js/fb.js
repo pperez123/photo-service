@@ -62,11 +62,6 @@ function checkLoginState() {
 	FB.getLoginStatus(function(response) {
 	  statusChangeCallback(response);
 	});
-	
-	if (loggedIntoFB) {
-		// TODO: send login data to the server
-		window.location = "angularjs.html";
-	}
 }
 
 // Here we run a very simple test of the Graph API after login is
@@ -105,9 +100,10 @@ function logIntoBackEnd(authResponse, meResponse) {
             console.log("Finished login to the back end.");
         })
         .fail(function(xhr, textStatus, errorThrown) {
-            console.log("Failed login to the back end.");
+            console.log("Failed login to the back end: " + errorThrown);
             console.log(xhr.responseText);
             console.log(textStatus);
+            //$('#error').text('Login failed. Please try again.');
         })
         .always(function() {
             console.log("Login happened.");

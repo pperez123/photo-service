@@ -56,18 +56,19 @@
 -->
 
               <div id="sign-in" style="margin-bottom:40px;">
-              	<div style="display:inline-block; vertical-align:middle;">
+              	<div style="display:none; vertical-align:middle;">
               		<a class="btn btn-lg btn-primary" href="#" role="button">Sign up today</a>
 				</div>
-                <div style="display:inline-block; width:5%;">
+                <div style="display:none; width:5%;">
               		Or
 				</div>
                 <div style="display:inline-block; vertical-align:middle">
               		<fb:login-button scope="public_profile,email" onlogin="checkLoginState();" data-size="xlarge"></fb:login-button>
 				</div>
-                <div id="status" style="margin-top:30px">
+                <div id="status" style="display:none; margin-top:30px">
                 If you already have a CoverSnap account, please <a href="#">log in</a>.
 				</div>
+                <div id="error" style="color:red; margin-top:30px"></div>
               </div>
               
             </p>
