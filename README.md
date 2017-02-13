@@ -28,13 +28,13 @@ from the client and successfully stored on the server.
 The upload service was first implemented as a servlet outside the
 Jersey framework using the Apache FileUpload library:
 
-[`com.pperez.photoService.servlet.UploadService.java`](photo-service/photoService/src/com/pperez/photoService/servlet/UploadService.java)
+[`com.pperez.photoService.servlet.UploadService.java`](src/com/pperez/photoService/servlet/UploadService.java)
 
 Later on, however, the code was refactored using the Jersey 
 framework to have a consistent implementation across all 
 endpoints:
 
-[`com.pperez.photoService.rest.UploadService.java`](photo-service/photoService/src/com/pperez/photoService/rest/UploadService.java)
+[`com.pperez.photoService.rest.UploadService.java`](src/com/pperez/photoService/rest/UploadService.java)
 
 ###Download A File
 
