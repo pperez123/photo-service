@@ -34,7 +34,7 @@ Later on, however, the code was refactored using the Jersey
 framework to have a consistent implementation across all 
 endpoints:
 
-[`com.pperez.photoService.rest.UploadService.java`](src/com/pperez/photoService/rest/UploadService.java)
+[`com.pperez.photoService.rest.UploadService.java`](photoService/src/com/pperez/photoService/rest/UploadService.java)
 
 ###Download A File
 
@@ -63,7 +63,7 @@ file with a MIME type of file as determined by the name. If the
 
 This functionality is implemented in:
 
-[`com.pperez.photoService.rest.FileService.java`](photo-service/photoService/src/com/pperez/photoService/rest/FileService.java)
+[`com.pperez.photoService.rest.FileService.java`](photoService/src/com/pperez/photoService/rest/FileService.java)
 
 ###Delete A File
 
@@ -88,7 +88,7 @@ The response is a JSON formatted list of the files successfully deleted.
 
 This functionality is implemented in:
 
-[`com.pperez.photoService.rest.FileService.java`](photo-service/photoService/src/com/pperez/photoService/rest/FileService.java)
+[`com.pperez.photoService.rest.FileService.java`](photoService/src/com/pperez/photoService/rest/FileService.java)
 
 
 ###List of Uploaded Files
@@ -107,11 +107,11 @@ the files in the server's upload repository.
 ####Source Notes
 This functionality is implemented in:
 
-[`com.pperez.photoService.rest.UploadService.java`](photo-service/photoService/src/com/pperez/photoService/rest/UploadService.java)
+[`com.pperez.photoService.rest.UploadService.java`](photoService/src/com/pperez/photoService/rest/UploadService.java)
 
 and
 
-[`com.pperez.photoService.rest.FileService.java`](photo-service/photoService/src/com/pperez/photoService/rest/FileService.java)
+[`com.pperez.photoService.rest.FileService.java`](photoService/src/com/pperez/photoService/rest/FileService.java)
 
 ###Fetching File Thumbnails
 
@@ -138,7 +138,7 @@ thumbnail file with the MIME type of the original image, such as
 
 This functionality is implemented in:
 
-[`com.pperez.photoService.rest.ThumbnailService.java`](photo-service/photoService/src/com/pperez/photoService/rest/ThumbnailService.java)
+[`com.pperez.photoService.rest.ThumbnailService.java`](photoService/src/com/pperez/photoService/rest/ThumbnailService.java)
 
 ###Facebook Login
 
@@ -158,4 +158,4 @@ expire.
 
 This functionality is implemented in:
 
-[`com.pperez.photoService.rest.LoginService.java`](photo-service/photoService/src/com/pperez/photoService/rest/LoginService.java)
+[`com.pperez.photoService.rest.LoginService.java`](photoService/src/com/pperez/photoService/rest/LoginService.java)
