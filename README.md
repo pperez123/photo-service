@@ -3,8 +3,8 @@
 This codebase was an attempt to create a file management API to upload, store, manage, 
 and download media files (photos, videos, etc). Designed to run on a Tomcat server, 
 the service is built as a RESTful API on top of the Jersey (JAX-RS) java framework. 
-While the project was not completed, the APIs for uploading, storing, and 
-listing the media files are in a functional state.
+While the project was not completed, the operations for uploading, downloading, deleting, and 
+listing the media files are functional.
 
 ##Endpoints
 
