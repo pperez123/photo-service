@@ -28,7 +28,7 @@ from the client and successfully stored on the server.
 The upload service was first implemented as a servlet outside the
 Jersey framework using the Apache FileUpload library:
 
-[`com.pperez.photoService.servlet.UploadService.java`](src/com/pperez/photoService/servlet/UploadService.java)
+[`com.pperez.photoService.servlet.UploadService.java`](photoService/src/com/pperez/photoService/servlet/UploadService.java)
 
 Later on, however, the code was refactored using the Jersey 
 framework to have a consistent implementation across all 
